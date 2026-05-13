@@ -10,6 +10,10 @@ const App: React.FC = () => {
     targetMarket: '',
     mainGoal: '',
     biggestFrustration: '',
+    ageRange: '',
+    occupation: '',
+    location: '',
+    incomeLevel: '',
   });
   
   const [generatedPersona, setGeneratedPersona] = useState<GeneratedPersona | null>(null);
@@ -32,10 +36,23 @@ const App: React.FC = () => {
 
     try {
       // Step 1: Generate Text (Name & Bio)
-      const personaText = await generatePersonaText(formData);
+      let personaText;
+      try {
+        personaText = await generatePersonaText(formData);
+      } catch (err: any) {
+        console.error("Text Generation Error:", err);
+        throw new Error(`Text Gen Failed: ${err.message}`);
+      }
       
       // Step 2: Generate Image based on visual description
-      const imageUrl = await generatePersonaImage(personaText.visualDescription);
+      let imageUrl;
+      try {
+        imageUrl = await generatePersonaImage(personaText.visualDescription);
+      } catch (err: any) {
+        console.error("Image Generation Error:", err);
+        // Don't fail the whole persona if only image fails
+        imageUrl = "https://picsum.photos/400/400";
+      }
 
       // Combine results
       setGeneratedPersona({
@@ -45,12 +62,12 @@ const App: React.FC = () => {
     } catch (err: any) {
       console.error(err);
       const errorMessage = err.message || '';
-      if (errorMessage.includes('PERMISSION_DENIED') || errorMessage.includes('API_KEY_INVALID')) {
-        setError("API Permission Error: Please ensure your API key is correctly configured in the 'Settings > Secrets' panel. Non-standard model names may also cause this.");
+      if (errorMessage.includes('PERMISSION_DENIED') || errorMessage.includes('API_KEY_INVALID') || errorMessage.includes('GEMINI_API_KEY is not defined')) {
+        setError(`API Error: ${errorMessage}. Please check your Gemini API key in Settings > Secrets.`);
       } else if (errorMessage.includes('RESOURCE_EXHAUSTED')) {
         setError("Quota Exceeded: You've reached your API limit. Please wait a moment or check your billing status.");
       } else {
-        setError("Failed to generate persona. Please check your connection and try again.");
+        setError(`Failed to generate persona: ${errorMessage}`);
       }
     } finally {
       setIsLoading(false);
@@ -77,40 +94,85 @@ const App: React.FC = () => {
         </div>
 
         {/* Form */}
-        <div className="w-full max-w-md bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl p-6 shadow-2xl">
+        <div className="w-full max-w-2xl bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl p-6 shadow-2xl">
           <form onSubmit={handleGenerate} className="space-y-6">
-            <Input
-              id="targetMarket"
-              name="targetMarket"
-              label="Target Market"
-              placeholder="e.g. Freelance Graphic Designers"
-              value={formData.targetMarket}
-              onChange={handleInputChange}
-              required
-            />
-            
-            <Input
-              id="mainGoal"
-              name="mainGoal"
-              label="Main Goal"
-              placeholder="e.g. Increase recurring monthly revenue"
-              value={formData.mainGoal}
-              onChange={handleInputChange}
-              required
-            />
-            
-            <Input
-              id="biggestFrustration"
-              name="biggestFrustration"
-              label="Biggest Frustration"
-              placeholder="e.g. Inconsistent client acquisition"
-              value={formData.biggestFrustration}
-              onChange={handleInputChange}
-              required
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <Input
+                  id="targetMarket"
+                  name="targetMarket"
+                  label="Target Market"
+                  placeholder="e.g. Freelance Graphic Designers"
+                  value={formData.targetMarket}
+                  onChange={handleInputChange}
+                  required
+                />
+                
+                <Input
+                  id="mainGoal"
+                  name="mainGoal"
+                  label="Main Goal"
+                  placeholder="e.g. Increase recurring monthly revenue"
+                  value={formData.mainGoal}
+                  onChange={handleInputChange}
+                  required
+                />
+                
+                <Input
+                  id="biggestFrustration"
+                  name="biggestFrustration"
+                  label="Biggest Frustration"
+                  placeholder="e.g. Inconsistent client acquisition"
+                  value={formData.biggestFrustration}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="space-y-6 p-4 bg-slate-800/30 rounded-xl border border-slate-700/50">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Persona Details (Optional)</h3>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    id="ageRange"
+                    name="ageRange"
+                    label="Age Range"
+                    placeholder="e.g. 25-35"
+                    value={formData.ageRange}
+                    onChange={handleInputChange}
+                  />
+                  <Input
+                    id="occupation"
+                    name="occupation"
+                    label="Occupation"
+                    placeholder="e.g. Designer"
+                    value={formData.occupation}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <Input
+                  id="location"
+                  name="location"
+                  label="Location"
+                  placeholder="e.g. New York, USA"
+                  value={formData.location}
+                  onChange={handleInputChange}
+                />
+
+                <Input
+                  id="incomeLevel"
+                  name="incomeLevel"
+                  label="Income Level"
+                  placeholder="e.g. $60k - $80k"
+                  value={formData.incomeLevel}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
 
             <Button type="submit" isLoading={isLoading}>
-              Generate Persona
+              Generate Detailed Persona
             </Button>
           </form>
           
@@ -123,8 +185,10 @@ const App: React.FC = () => {
 
         {/* Results */}
         {generatedPersona && (
-          <div className="w-full animate-fade-in-up">
-             <PersonaCard data={generatedPersona} />
+          <div className="w-full animate-fade-in-up overflow-x-auto pb-8">
+             <div className="min-w-[1000px] lg:min-w-0">
+               <PersonaCard data={generatedPersona} />
+             </div>
           </div>
         )}
 
