@@ -44,7 +44,14 @@ const App: React.FC = () => {
       });
     } catch (err: any) {
       console.error(err);
-      setError("Failed to generate persona. Please check your API key and try again.");
+      const errorMessage = err.message || '';
+      if (errorMessage.includes('PERMISSION_DENIED') || errorMessage.includes('API_KEY_INVALID')) {
+        setError("API Permission Error: Please ensure your API key is correctly configured in the 'Settings > Secrets' panel. Non-standard model names may also cause this.");
+      } else if (errorMessage.includes('RESOURCE_EXHAUSTED')) {
+        setError("Quota Exceeded: You've reached your API limit. Please wait a moment or check your billing status.");
+      } else {
+        setError("Failed to generate persona. Please check your connection and try again.");
+      }
     } finally {
       setIsLoading(false);
     }

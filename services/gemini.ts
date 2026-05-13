@@ -1,9 +1,10 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { PersonaInput, PersonaData } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const getAI = () => new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
 
 export const generatePersonaText = async (input: PersonaInput): Promise<PersonaData> => {
+  const ai = getAI();
   const prompt = `
     Create a detailed user persona based on the following inputs:
     - Target Market: ${input.targetMarket}
@@ -17,7 +18,7 @@ export const generatePersonaText = async (input: PersonaInput): Promise<PersonaD
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -42,24 +43,41 @@ export const generatePersonaText = async (input: PersonaInput): Promise<PersonaD
 };
 
 export const generatePersonaImage = async (visualDescription: string): Promise<string> => {
-  const prompt = `Professional headshot of ${visualDescription}, high quality, 4k, photorealistic, studio lighting, neutral background`;
+  const ai = getAI();
+  const prompt = `Professional headshot of ${visualDescription}, high quality, photorealistic, studio lighting, neutral background`;
 
-  const response = await ai.models.generateImages({
-    model: 'imagen-4.0-generate-001',
-    prompt: prompt,
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash-image',
+    contents: {
+      parts: [
+        {
+          text: prompt,
+        },
+      ],
+    },
     config: {
-      numberOfImages: 1,
-      outputMimeType: 'image/jpeg',
-      aspectRatio: '1:1',
+      imageConfig: {
+        aspectRatio: "1:1",
+      },
     },
   });
 
-  const base64Image = response.generatedImages?.[0]?.image?.imageBytes;
+  let imageUrl = "";
   
-  if (!base64Image) {
-     // Fallback if image generation fails or is filtered
-     return "https://picsum.photos/400/400";
+  if (response.candidates?.[0]?.content?.parts) {
+    for (const part of response.candidates[0].content.parts) {
+      if (part.inlineData) {
+        const base64Image = part.inlineData.data;
+        imageUrl = `data:${part.inlineData.mimeType || 'image/png'};base64,${base64Image}`;
+        break;
+      }
+    }
   }
 
-  return `data:image/jpeg;base64,${base64Image}`;
+  if (!imageUrl) {
+    // Fallback if image generation fails or is filtered
+    return "https://picsum.photos/400/400";
+  }
+
+  return imageUrl;
 };

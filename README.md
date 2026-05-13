@@ -1,34 +1,20 @@
-# User Persona Generator
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-Generate detailed user personas with AI-generated profile photos — a core PM research artifact, ready in minutes instead of days.
+# Run and deploy your AI Studio app
 
-We use the following tech stack:
-- Google Gemini for persona generation and image creation
-- TypeScript + React for the interface
-- Tailwind CSS for styling
+This contains everything you need to run your app locally.
 
-## 🚀 Features
+View your app in AI Studio: https://ai.studio/apps/d3f3279c-c8c7-4cf3-9946-285d80001984
 
-* **Full Persona Profiles:** Goals, pain points, behaviors, motivations, preferred channels, and a representative quote — all generated from your target segment description
-* **AI-Generated Photos:** Realistic profile headshots that bring each persona to life visually
-* **Multiple Archetypes:** Generate a full set of 3–5 distinct user types in one session
-* **Presentation-Ready Output:** Clean format you can drop directly into a PRD, design sprint, or pitch deck
-* **Customizable Input:** Define your industry, product type, or user role to get tailored personas
+## Run Locally
 
-## Setup
+**Prerequisites:**  Node.js
 
-```bash
-git clone https://github.com/yatinbhalla/User-Persona-Generator.git
-cd User-Persona-Generator
-npm install
-echo "GEMINI_API_KEY=your_key_here" > .env.local
-npm run dev
-```
 
-## Author
-
-Yatin Bhalla
-<br>
-🛍️ PM & AI builder | Managing retail businesses | PG Product Management @ BITS School of Management
-<br>
-🔗 [linkedin.com/in/yatin-bhalla-834632238](https://linkedin.com/in/yatin-bhalla-834632238)
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
